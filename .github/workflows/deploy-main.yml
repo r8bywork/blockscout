@@ -94,11 +94,12 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Build and Push Docker Image
-        run: |
-          docker build --platform linux/amd64 --build-arg GIT_COMMIT_SHA=$(git rev-parse --short HEAD) --build-arg GIT_TAG=$(git describe --tags --abbrev=0) -t r8by/blockscout-frontend:blockscout-frontend .
-          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
-          docker push r8by/blockscout-frontend:blockscout-frontend
+#      - name: Build and Push Docker Image
+#        run: |
+#          docker build --platform linux/amd64 --build-arg GIT_COMMIT_SHA=$(git rev-parse --short HEAD) --build-arg GIT_TAG=$(git describe --tags --abbrev=0) -t r8by/blockscout-frontend:blockscout-frontend .
+#          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+#          docker push r8by/blockscout-frontend:blockscout-frontend
+
 #                    docker tag r8by/blockscout-frontend:local r8by/blockscout-frontend:blockscout-frontend
 #          docker build --platform linux/amd64 --build-arg GIT_COMMIT_SHA=$(git rev-parse --short HEAD) --build-arg GIT_TAG=$(git describe --tags --abbrev=0) -t blockscout-frontend:local .
 #          docker tag blockscout-frontend:local ${{ secrets.DOCKER_REGISTRY }}/blockscout-frontend:blockscout-frontend
@@ -121,9 +122,10 @@ jobs:
           host: ${{ secrets.DEV_SERVER_HOST }}
           username: ${{ secrets.DEV_SERVER_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            # Pull the latest image and restart the container
-            docker pull r8by/blockscout-frontend:blockscout-frontend
-            docker stop blockscout-frontend || true
-            docker rm blockscout-frontend || true
-            docker run -d --name blockscout-frontend -p 80:80 r8by/blockscout-frontend:blockscout-frontend
+          script: | 
+            whoami
+#             Pull the latest image and restart the container
+#            docker pull r8by/blockscout-frontend:blockscout-frontend
+#            docker stop blockscout-frontend || true
+#            docker rm blockscout-frontend || true
+#            docker run -d --name blockscout-frontend -p 80:80 r8by/blockscout-frontend:blockscout-frontend

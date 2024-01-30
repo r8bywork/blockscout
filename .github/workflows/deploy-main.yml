@@ -123,8 +123,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             # Pull the latest image and restart the container
-            docker pull r8by/blockscout-frontend:blockscout-frontend
+            docker pull ${{ secrets.DOCKER_REGISTRY }}/blockscout-frontend:blockscout-frontend
             docker stop blockscout-frontend || true
             docker rm blockscout-frontend || true
-            docker run -d --name blockscout-frontend -p 80:80 r8by/blockscout-frontend:blockscout-frontend
-  #            docker pull ${{ secrets.DOCKER_REGISTRY }}/blockscout-frontend:blockscout-frontend
+            docker run -d --name blockscout-frontend -p 80:80 ${{ secrets.DOCKER_REGISTRY }}/blockscout-frontend:blockscout-frontend

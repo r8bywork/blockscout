@@ -116,6 +116,11 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           eval $(ssh-agent)
 
+      - name: Debug SSH Key
+        run: |
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > debug_key
+          cat debug_key
+
       - name: SSH into Server and Deploy
         uses: appleboy/ssh-action@v1.0.0
         with:

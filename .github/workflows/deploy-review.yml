@@ -1,38 +1,82 @@
-name: Deploy review environment
+#name: Deploy review environment
+#
+#on:
+#  workflow_dispatch:
+#
+#jobs:
+#  make_slug:
+#    name: Make GitHub reference slug
+#    runs-on: ubuntu-latest
+#    outputs:
+#      REF_SLUG: ${{ steps.output.outputs.REF_SLUG }}
+#    steps:
+#      -   name: Inject slug/short variables
+#          uses: rlespinasse/github-slug-action@v4.4.1
+#
+#      -   name: Set output
+#          id: output
+#          run: echo "REF_SLUG=${{ env.GITHUB_REF_NAME_SLUG }}" >> $GITHUB_OUTPUT
+#
+#  publish_image:
+#    name: Publish Docker image
+#    needs: make_slug
+#    uses: './.github/workflows/publish-image.yml'
+#    with:
+#        tags: ghcr.io/blockscout/frontend:review-${{ needs.make_slug.outputs.REF_SLUG }}
+#    secrets: inherit
+#
+#  deploy_review:
+#    name: Deploy frontend
+#    needs: [ make_slug, publish_image ]
+#    uses: blockscout/blockscout-ci-cd/.github/workflows/deploy_helmfile.yaml@master
+#    with:
+#      appName: review-${{ needs.make_slug.outputs.REF_SLUG }}
+#      globalEnv: review
+#      helmfileDir: deploy
+#      kubeConfigSecret: ci/data/dev/kubeconfig/k8s-dev
+#      vaultRole: ci-dev
+#    secrets: inherit
+
+name: Deploy Frontend
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [ "main" ]  # Используйте вашу основную ветку
 
 jobs:
-  make_slug:
-    name: Make GitHub reference slug
+  build:
+
     runs-on: ubuntu-latest
-    outputs:
-      REF_SLUG: ${{ steps.output.outputs.REF_SLUG }}
+
     steps:
-      -   name: Inject slug/short variables
-          uses: rlespinasse/github-slug-action@v4.4.1
+      - name: Checkout Repository
+        uses: actions/checkout@v3
 
-      -   name: Set output
-          id: output
-          run: echo "REF_SLUG=${{ env.GITHUB_REF_NAME_SLUG }}" >> $GITHUB_OUTPUT
+      - name: Build and Push Docker Image
+        run: |
+          docker build --platform linux/amd64 --build-arg GIT_COMMIT_SHA=$(git rev-parse --short HEAD) --build-arg GIT_TAG=$(git describe --tags --abbrev=0) -t blockscout-frontend:local .
+          docker tag blockscout-frontend:local ${{ secrets.DOCKER_REGISTRY }}/blockscout-frontend:latest
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin ${{ secrets.DOCKER_REGISTRY }}
+          docker push ${{ secrets.DOCKER_REGISTRY }}/blockscout-frontend:latest
 
-  publish_image:
-    name: Publish Docker image
-    needs: make_slug
-    uses: './.github/workflows/publish-image.yml'
-    with:
-        tags: ghcr.io/blockscout/frontend:review-${{ needs.make_slug.outputs.REF_SLUG }}
-    secrets: inherit
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh/
+          touch ~/.ssh/known_hosts
+          ssh-keyscan ${{ secrets.DEV_SERVER_HOST }} >> ~/.ssh/known_hosts
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          eval $(ssh-agent)
 
-  deploy_review:
-    name: Deploy frontend
-    needs: [ make_slug, publish_image ]
-    uses: blockscout/blockscout-ci-cd/.github/workflows/deploy_helmfile.yaml@master
-    with:
-      appName: review-${{ needs.make_slug.outputs.REF_SLUG }}
-      globalEnv: review
-      helmfileDir: deploy
-      kubeConfigSecret: ci/data/dev/kubeconfig/k8s-dev
-      vaultRole: ci-dev
-    secrets: inherit
+      - name: SSH into Server and Deploy
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.DEV_SERVER_HOST }}
+          username: ${{ secrets.DEV_SERVER_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            # Pull the latest image and restart the container
+            docker pull ${{ secrets.DOCKER_REGISTRY }}/blockscout-frontend:latest
+            docker stop blockscout-frontend || true
+            docker rm blockscout-frontend || true
+            docker run -d --name blockscout-frontend -p 80:80 ${{ secrets.DOCKER_REGISTRY }}/blockscout-frontend:latest

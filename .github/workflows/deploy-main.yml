@@ -126,7 +126,7 @@ jobs:
         with:
           host: ${{ secrets.DEV_SERVER_HOST }}
           username: ${{ secrets.DEV_SERVER_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          password: ${{ secrets.SSH_PRIVATE_KEY }}
           script: | 
             whoami
 #             Pull the latest image and restart the container

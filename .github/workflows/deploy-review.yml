@@ -52,6 +52,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
+
       - name: Build and Push Docker Image
         run: |
           docker build --platform linux/amd64 --build-arg GIT_COMMIT_SHA=$(git rev-parse --short HEAD) --build-arg GIT_TAG=$(git describe --tags --abbrev=0) -t blockscout-frontend:local .

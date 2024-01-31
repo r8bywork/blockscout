@@ -50,7 +50,7 @@ const Footer = () => {
     {
       icon: 'social/zealy' as const,
       iconSize: '24px',
-      text: 'Zealy',
+      text: 'Zealys',
       url: 'https://zealy.io/c/blockchainsports',
     },
     {

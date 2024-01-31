@@ -131,4 +131,4 @@ jobs:
             docker pull r8by/blockscout-frontend:blockscout-frontend
             docker stop blockscout-frontend || true
             docker rm blockscout-frontend || true
-            docker run -d --name r8by/blockscout-frontend -p 80:80 r8by/blockscout-frontend:blockscout-frontend
+            docker run -d --name blockscout-frontend -p 80:80 r8by/blockscout-frontend:blockscout-frontend

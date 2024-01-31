@@ -125,4 +125,5 @@ jobs:
             docker stop blockscout-frontend || true
             docker rm blockscout-frontend || true
             docker run -d --name blockscout-frontend -p 127.0.0.1:8080:80 --env-file .env r8by/blockscout-frontend:blockscout-frontend
+            
 #            docker run -d --name blockscout-frontend --env-file .env -p 80:80 r8by/blockscout-frontend:blockscout-frontend
